@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>פרופיל משתמש - החנות שלי</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <!-- כותרת -->
+    <header>
+        <div class="logo">
+            <img src="assets/logo.png" alt="לוגו החנות" onerror="this.style.display='none'">
+            <h1>🛍️ החנות שלי</h1>
+        </div>
+        <nav>
+            <ul id="categories-menu">
+                <li><a href="index.html">דף הבית</a></li>
+            </ul>
+        </nav>
+        <div class="header-actions">
+            <input type="text" id="search-input" placeholder="חפש מוצר...">
+            <button id="search-btn">חיפוש</button>
+            <a href="cart.html" class="cart-link">🛒 סל קניות (<span id="cart-count">0</span>)</a>
+            <a href="login.html" class="login-link" id="login-link">התחברות</a>
+            <span id="user-info" style="display: none;"></span>
+        </div>
+    </header>
+
+    <main>
+        <section id="user-profile">
+            <h2>👤 פרופיל משתמש</h2>
+            <div id="profile-info">
+                <!-- פרטי המשתמש ייטענו כאן ב-JS -->
+            </div>
+        </section>
+
+        <section id="user-orders">
+            <h2>📦 ההזמנות שלי</h2>
+            <div style="overflow-x: auto;">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>מספר הזמנה</th>
+                            <th>תאריך</th>
+                            <th>מוצרים</th>
+                            <th>סה"כ</th>
+                            <th>סטטוס</th>
+                        </tr>
+                    </thead>
+                    <tbody id="orders-table-body">
+                        <!-- ההזמנות ייטענו כאן ב-JS -->
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <section id="logout-section" style="text-align: center; margin-top: 30px;">
+            <button id="logout-btn" class="btn" style="background: #dc3545; padding: 12px 30px; font-size: 1.1rem;">
+                🚪 התנתק
+            </button>
+        </section>
+    </main>
+
+    <footer>
+        <p>© 2025 החנות שלי - כל הזכויות שמורות</p>
+        <p>צור קשר: support@myshop.com | 📞 03-1234567</p>
+    </footer>
+
+    <!-- טעינת קבצי JS -->
+    <script src="js/api.js"></script>
+    <script src="js/cart.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/user.js"></script>
+</body>
+</html>

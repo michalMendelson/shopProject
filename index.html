@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>החנות שלי - דף הבית</title>
+    <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+    <!-- כותרת ותפריט -->
+    <header>
+        <div class="logo">
+            <img src="assets/logo.png" alt="לוגו החנות" onerror="this.style.display='none'" />
+            <h1>🛍️ החנות שלי</h1>
+        </div>
+        <nav>
+            <ul id="categories-menu">
+                <li><a href="#" onclick="loadProducts(); return false;">כל המוצרים</a></li>
+                <!-- קטגוריות ייטענו כאן -->
+            </ul>
+        </nav>
+        <div class="header-actions">
+            <input type="text" id="search-input" placeholder="חפש מוצר..." />
+            <button id="search-btn">חיפוש</button>
+            <a href="cart.html" class="cart-link">🛒 סל קניות (<span id="cart-count">0</span>)</a>
+            <a href="login.html" class="login-link" id="login-link">התחברות</a>
+            <span id="user-info" style="display: none;">
+                <span id="user-name"></span>
+                <a href="user.html" style="color: white; margin-left: 10px;">פרופיל</a>
+            </span>
+        </div>
+    </header>
+
+    <!-- אזור תוכן ראשי -->
+    <main>
+        <section id="promotions">
+            <h2>🔥 מבצעים חמים</h2>
+            <div id="promo-products" class="product-grid">
+                <!-- מוצרים יטענו כאן -->
+            </div>
+        </section>
+
+        <section id="category-products">
+            <h2 id="section-title">מוצרים פופולריים</h2>
+            <div id="products-container" class="product-grid">
+                <!-- מוצרים ייטענו כאן -->
+            </div>
+        </section>
+    </main>
+
+    <!-- פוטר -->
+    <footer>
+        <p>© 2025 החנות שלי - כל הזכויות שמורות</p>
+        <p>צור קשר: support@myshop.com | 📞 03-1234567</p>
+    </footer>
+
+    <!-- טעינת קבצי JS בסדר הנכון -->
+    <script src="js/api.js"></script>
+    <script src="js/cart.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/main.js"></script>
+</body>
+</html>

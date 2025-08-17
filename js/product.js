@@ -20,9 +20,21 @@ async function initializeProductPage() {
 
 // === טעינת פרטי המוצר ===
 async function loadProduct() {
+    const loadingEl = document.getElementById("loading");
+    if (loadingEl) loadingEl.style.display = "block";
+
     const params = new URLSearchParams(window.location.search);
     const productId = params.get("id");
-    
+
+    console.log("🔹 window.location.search:", window.location.search);
+    console.log("🔹 Extracted productId:", productId);
+
+    if (!productId) {
+        console.warn("⚠️ No product ID provided in URL!");
+        if (loadingEl) loadingEl.style.display = "none";
+        return;
+    }
+
     const productDetails = document.getElementById("product-details");
     const productTitle = document.getElementById("product-title");
     const productDescription = document.getElementById("product-description");
@@ -31,20 +43,19 @@ async function loadProduct() {
     const mainImage = document.getElementById("main-image");
     const thumbnailImages = document.getElementById("thumbnail-images");
 
-    if (!productId) {
-        if (productDetails) {
-            productDetails.innerHTML = "<p class='no-products'>מוצר לא נמצא</p>";
-        }
-        return;
-    }
-
-    // הצגת טעינה
     if (productDetails) {
         productDetails.innerHTML = '<div class="loading">טוען פרטי מוצר...</div>';
     }
 
     try {
+        console.log(`🔹 Fetching product with ID: ${productId}`);
         const product = await fetchProductById(productId);
+        console.log("✅ Fetched product data:", product);
+
+        if (!product || Object.keys(product).length === 0) {
+            throw new Error("המוצר שהתקבל ריק");
+        }
+
         currentProduct = product;
 
         // עדכון כותרת הדף
@@ -55,7 +66,8 @@ async function loadProduct() {
             mainImage.src = product.thumbnail;
             mainImage.alt = product.title;
             mainImage.onerror = function() {
-                this.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjZGRkIi8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZm9udC1zaXplPSIxNCIgZmlsbD0iIzk5OSIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iPk5vIEltYWdlPC90ZXh0Pjwvc3ZnPg==';
+                console.warn("❌ Main image failed to load, using placeholder");
+                this.src = 'data:image/svg+xml;base64,...'; // placeholder
             };
         }
 
@@ -68,6 +80,7 @@ async function loadProduct() {
                 img.alt = `${product.title} - תמונה ${index + 1}`;
                 img.onclick = () => changeMainImage(imageUrl);
                 img.onerror = function() {
+                    console.warn("❌ Thumbnail image failed:", imageUrl);
                     this.style.display = 'none';
                 };
                 thumbnailImages.appendChild(img);
@@ -75,47 +88,22 @@ async function loadProduct() {
         }
 
         // עדכון פרטי המוצר
-        if (productTitle) {
-            productTitle.textContent = product.title;
-        }
-
-        if (productDescription) {
-            productDescription.textContent = product.description;
-        }
-
-        if (productPrice) {
-            productPrice.textContent = product.price;
-        }
+        if (productTitle) productTitle.textContent = product.title;
+        if (productDescription) productDescription.textContent = product.description;
+        if (productPrice) productPrice.textContent = product.price;
 
         // מידע נוסף
         if (productExtra) {
             let extraInfo = [];
-            
-            if (product.category) {
-                extraInfo.push(`קטגוריה: ${translateCategory(product.category)}`);
-            }
-            
-            if (product.brand) {
-                extraInfo.push(`מותג: ${product.brand}`);
-            }
-            
-            if (product.rating) {
-                extraInfo.push(`דירוג: ${product.rating} ⭐`);
-            }
-            
-            if (product.stock) {
-                extraInfo.push(`במלאי: ${product.stock} יחידות`);
-            }
-            
+            if (product.category) extraInfo.push(`קטגוריה: ${translateCategory(product.category)}`);
+            if (product.brand) extraInfo.push(`מותג: ${product.brand}`);
+            if (product.rating) extraInfo.push(`דירוג: ${product.rating} ⭐`);
+            if (product.stock) extraInfo.push(`במלאי: ${product.stock} יחידות`);
             if (product.dimensions) {
                 const dim = product.dimensions;
                 extraInfo.push(`מידות: ${dim.width}×${dim.height}×${dim.depth} ס"מ`);
             }
-            
-            if (product.weight) {
-                extraInfo.push(`משקל: ${product.weight} ק"ג`);
-            }
-
+            if (product.weight) extraInfo.push(`משקל: ${product.weight} ק"ג`);
             productExtra.innerHTML = extraInfo.map(info => `<p>${info}</p>`).join('');
         }
 
@@ -123,17 +111,22 @@ async function loadProduct() {
         loadReviews(product);
 
         // הסרת הטעינה מהדף
-        if (productDetails && productDetails.classList) {
-            productDetails.classList.remove('loading');
-        }
+        if (productDetails && productDetails.classList) productDetails.classList.remove('loading');
+
+        console.log("🎉 Product page loaded successfully!");
 
     } catch (error) {
-        console.error("Error loading product:", error);
+        console.error("❌ Error loading product:", error);
         if (productDetails) {
             productDetails.innerHTML = `<p class="no-products">שגיאה בטעינת המוצר: ${error.message}</p>`;
         }
     }
+
+    if (loadingEl) loadingEl.style.display = "none";
 }
+
+
+
 
 // === החלפת תמונה ראשית ===
 function changeMainImage(imageUrl) {
@@ -238,7 +231,3 @@ function escapeHtml(text) {
     return div.innerHTML;
 }
 
-// מעבר לעמוד מוצר (לשימוש בדפים אחרים)
-function viewProduct(productId) {
-    window.location.href = `product.html?id=${productId}`;
-}

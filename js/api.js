@@ -1,7 +1,7 @@
 
 // קבועים לכתובות API
-const BIN_ID = '6899d504d0ea881f40569d27';
-const BIN_URL = `https://api.jsonbin.io/v3/b/${BIN_ID}/latest`;
+const BIN_ID = '689c5bde43b1c97be91d4b5b';
+const BIN_URL = `https://api.jsonbin.io/v3/b/${BIN_ID}`;
 const API_BASE_URL = 'https://dummyjson.com';
 const JSONBIN_API_URL = 'https://api.jsonbin.io/v3/b';
 const API_KEY = '$2a$10$laHYgxEfvvYKcPoe41VEb.GMNiHUXtJbbM7.YFWXiiDhZ5eTJ92ry';  
@@ -57,15 +57,18 @@ async function fetchSearchProducts(query, limit = 30) {
 
 // קבלת מוצר בודד לפי ID
 async function fetchProductById(id) {
-    try {
+    try {    
         const response = await fetch(`${API_BASE_URL}/products/${id}`);
-        if (!response.ok) throw new Error('Failed to fetch product');
-        return await response.json();
+        if (!response.ok) {
+            throw new Error(`שגיאה בטעינת מוצר - סטטוס: ${response.status}`);
+        }
+        const product = await response.json();
+        return product;
     } catch (error) {
-        console.error('Error fetching product by ID:', error);
         throw error;
     }
 }
+
 
 // === פונקציות התחברות עם dummyjson ===
 
@@ -92,7 +95,7 @@ async function authenticateUser(username, password) {
 }
 
 
-// רישום משתמש חדש (סימולציה)
+// רישום משתמש חדש 
 async function registerUser(userData) {
     try {
         const response = await fetch(`${API_BASE_URL}/users/add`, {
@@ -118,7 +121,7 @@ async function registerUser(userData) {
 function translateCategory(category) {
     const translations = {
         'smartphones': 'סמארטפונים',
-        'laptops': 'מחשבים נייدים',
+        'laptops': 'מחשבים ניידים',
         'fragrances': 'בשמים',
         'skincare': 'קוסמטיקה',
         'groceries': 'מצרכים',
@@ -158,8 +161,6 @@ function handleApiError(error, containerId) {
         container.innerHTML = `<div class="no-products">שגיאה: ${error.message}</div>`;
     }
 }
-
-
 
 
 async function saveToJsonBin(binId, data) {
@@ -204,7 +205,7 @@ async function loadFromJsonBin() {
     }
 }
 
-async function saveCurrentUser(userData) {
+/*async function saveCurrentUser(userData) {
     try {
         await saveToJsonBin(BIN_ID, { currentUser: userData });
     } catch (error) {
@@ -232,3 +233,4 @@ async function clearCurrentUser() {
 window.getCurrentUser = getCurrentUser;
 window.saveCurrentUser = saveCurrentUser;
 window.clearCurrentUser = clearCurrentUser;
+*/

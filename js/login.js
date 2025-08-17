@@ -9,7 +9,6 @@ async function initializeLoginPage() {
         return;
     }
     setupLoginForm();
-    setupDemoCredentials();
 }
 
 function setupLoginForm() {
@@ -48,20 +47,22 @@ function setupLoginForm() {
 }
 
 async function authenticateUser(username, password) {
-    try {
-        const users = await loadFromJsonBin();
-        const user = users.find(u => u.username === username && u.password === password);
+    const users = await getUsersFromBin();
 
-        if (user) {
-            console.log("Login successful", user);
-            // לשמור ב־localStorage או sessionStorage
-        } else {
-            console.log("Invalid credentials");
-        }
-    } catch (err) {
-        console.error("Login error:", err);
+    // אם ה-BIN שלך שומר במבנה { users: [...] }
+    const userList = Array.isArray(users) ? users : users.users || [];
+
+    const user = userList.find(u => u.username === username && u.password === password);
+
+    if (!user) {
+        throw new Error("שם משתמש או סיסמה לא נכונים");
     }
+
+    // להחזיר את המשתמש בלי השדה password
+    const { password: _, ...userSafe } = user;
+    return userSafe;
 }
+
 
 
 function showLoginMessage(message, type = "info") {
@@ -109,21 +110,7 @@ function getCurrentUser() {
     }
 }
 
-function setupDemoCredentials() {
-    const demoSection = document.createElement("div");
-    demoSection.style.cssText = "text-align: center; margin-top: 20px; padding: 15px; background: #f0f8ff; border-radius: 8px; border: 1px solid #ddd;";
-    demoSection.innerHTML = `
-        <h4 style="margin-bottom: 10px; color: #333;">משתמש לדוגמה:</h4>
-        <p style="margin: 5px 0; font-size: 0.9rem;">שם משתמש: <strong>kminchelle</strong></p>
-        <p style="margin: 5px 0; font-size: 0.9rem;">סיסמה: <strong>0lelplR</strong></p>
-        <button onclick="fillDemoCredentials()" style="margin-top: 10px; padding: 5px 15px; background: #0a9396; color: white; border: none; border-radius: 5px; cursor: pointer;">מלא אוטומטית</button>
-    `;
 
-    const authSection = document.querySelector(".auth-section");
-    if (authSection) {
-        authSection.appendChild(demoSection);
-    }
-}
 
 function fillDemoCredentials() {
     const usernameField = document.getElementById("username");

@@ -2,33 +2,41 @@
 
 let currentUser = getCurrentUserLocal(); // טען משתמש שנשמר בזיכרון המקומי
 
-// --- פונקציות עבודה עם JSONBin ---
 
-// טען את רשימת המשתמשים מה-BIN (מערך משתמשים)
+
+// טען *מערך* משתמשים ישיר מה-BIN
 async function getUsersFromBin() {
     try {
-        const response = await fetch(`${BIN_URL}/latest`, {
-            headers: { 'X-Master-Key': API_KEY }
-        });
-        if (!response.ok) return [];
-        const data = await response.json();
-        return data.record || [];
-    } catch {
-        return [];
+      const res = await fetch(`${BIN_URL}/latest`, {
+        headers: { 'X-Master-Key': API_KEY }
+      });
+      if (!res.ok) return [];
+      const data = await res.json();
+      // אנו עובדים עם מערך ישיר שנמצא ב-data.record
+      return Array.isArray(data.record) ? data.record : [];
+    } catch (e) {
+      console.error('getUsersFromBin error:', e);
+      return [];
     }
-}
-
-// שמור רשימת משתמשים מעודכנת ב-BIN
-async function saveUsersToBin(users) {
-    await fetch(BIN_URL, {
-        method: 'PUT',
-        headers: {
-            'Content-Type': 'application/json',
-            'X-Master-Key': API_KEY
-        },
-        body: JSON.stringify(users)
+  }
+  
+  // שמור את כל המערך בחזרה (PUT על כל הרשומה)
+  async function saveUsersToBin(users) {
+    const res = await fetch(BIN_URL, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-Master-Key': API_KEY
+      },
+      body: JSON.stringify(users) // שימי לב: לא עטוף ב-users
     });
-}
+    if (!res.ok) throw new Error('שגיאה בשמירת המשתמשים');
+  }
+  
+
+
+  
+
 
 // --- פונקציות ניהול סשן משתמש ב-localStorage ---
 
@@ -55,18 +63,23 @@ function clearCurrentUserLocal() {
 // --- התחברות ---
 
 async function authenticateUser(username, password) {
-    const users = await getUsersFromBin();
+    // נביא את כל המשתמשים ישירות מה-BIN
+    const users = await getUsersFromBin(); 
 
-    // חיפוש משתמש תואם
-    const user = users.find(u => u.username === username && u.password === password);
+    // נמצא משתמש עם שם וסיסמה תואמים
+    const user = users.find(
+        u => u.username === username && u.password === password
+    );
+
     if (!user) {
-        throw new Error('שם משתמש או סיסמה שגויים');
+        throw new Error("שם משתמש או סיסמה לא נכונים");
     }
 
-    // מחזיר את המשתמש ללא הסיסמה
+    // להחזיר בלי הסיסמה
     const { password: _, ...userSafe } = user;
     return userSafe;
 }
+
 
 // --- הרשמה ---
 
@@ -198,44 +211,3 @@ document.addEventListener('DOMContentLoaded', () => {
     updateUserStatus();
 });
 
-async function loadFromJsonBin(binId) {
-    try {
-        const response = await fetch(`https://api.jsonbin.io/v3/b/${binId}/latest`, {
-            headers: {
-                'X-Master-Key': JSONBIN_API_KEY
-            }
-        });
-
-        if (!response.ok) {
-            throw new Error('Failed to load from JsonBin');
-        }
-
-        const result = await response.json();
-        return result.record || [];
-    } catch (error) {
-        console.error('JsonBin load error:', error);
-        return [];
-    }
-}
-
-async function saveToJsonBin(binId, data) {
-    try {
-        const response = await fetch(`https://api.jsonbin.io/v3/b/${binId}`, {
-            method: 'PUT',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-Master-Key': JSONBIN_API_KEY
-            },
-            body: JSON.stringify(data)  // כאן חשוב לשלוח את כל מערך המשתמשים
-        });
-
-        if (!response.ok) {
-            throw new Error('Failed to save to JsonBin');
-        }
-
-        return await response.json();
-    } catch (error) {
-        console.error('JsonBin save error:', error);
-        throw error;
-    }
-}

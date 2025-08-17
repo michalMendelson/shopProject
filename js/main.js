@@ -67,6 +67,13 @@ async function loadProducts() {
         if (sectionTitle) {
             sectionTitle.textContent = 'מוצרים פופולריים';
         }
+        try {
+            const data = await fetchProducts(12); // או fetchProductsByCategory
+            console.log("נתוני מוצרים מה-API:", data.products); // <--- פה תראה מה יש באמת
+            renderProducts(data.products, productsContainer);
+        } catch (error) {
+            handleApiError(error, 'products-container');
+        }
         
         // ניקוי קטגוריה פעילה
         clearActiveCategory();
@@ -107,7 +114,12 @@ async function loadPromoProducts() {
     try {
         // נטען 4 מוצרים ראשונים עם הנחה סימולטיבית
         const data = await fetchProducts(4);
-        renderPromoProducts(data.products, promoContainer);
+        // משתמשים ב-renderProducts עם isPromo = true
+        promoContainer.innerHTML = '';
+        data.products.forEach(product => {
+            const card = createProductCard(product, true); // true = מבצע
+            promoContainer.appendChild(card);
+        });
     } catch (error) {
         console.error('Error loading promo products:', error);
         if (promoContainer) {
@@ -115,6 +127,7 @@ async function loadPromoProducts() {
         }
     }
 }
+
 
 // === חיפוש מוצרים ===
 async function searchProducts() {
@@ -162,57 +175,57 @@ function renderProducts(products, container) {
 }
 
 // === רנדור מוצרי מבצעים ===
-function renderPromoProducts(products, container) {
-    if (!products || products.length === 0) {
-        container.innerHTML = '<div class="no-products">אין מבצעים כרגע</div>';
-        return;
-    }
-
-    container.innerHTML = '';
-    products.forEach(product => {
-        const card = createProductCard(product, true);
-        container.appendChild(card);
-    });
-}
-
-// === יצירת כרטיס מוצר ===
 function createProductCard(product, isPromo = false) {
     const card = document.createElement('div');
     card.className = 'product-card';
-    
-    const discountPrice = isPromo ? (product.price * 0.8).toFixed(2) : null;
-    const finalPrice = isPromo ? discountPrice : product.price;
-    
-    const priceHTML = isPromo 
+
+    const priceHTML = isPromo
         ? `<p class="price">
              <span style="text-decoration: line-through; color: #999;">${product.price}₪</span>
-             <span style="color: #ff4444; font-weight: bold;">${discountPrice}₪</span>
+             <span style="color: #ff4444; font-weight: bold;">${(product.price * 0.8).toFixed(2)}₪</span>
            </p>`
         : `<p class="price">${product.price}₪</p>`;
 
     card.innerHTML = `
-        <img src="${product.thumbnail}" 
-             alt="${product.title}" 
-             onerror="this.src='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjZGRkIi8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZm9udC1zaXplPSIxNCIgZmlsbD0iIzk5OSIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iPk5vIEltYWdlPC90ZXh0Pjwvc3ZnPg=='">
+        <img src="${product.thumbnail}" alt="${product.title}" onerror="this.src='placeholder.svg'">
         <h3>${escapeHtml(product.title)}</h3>
         ${priceHTML}
-        <p style="color: #666; font-size: 0.9rem; margin: 0.5rem 0;">
-            ${product.description ? escapeHtml(product.description.substring(0, 60)) + '...' : ''}
-        </p>
-        <div style="display: flex; gap: 5px; flex-wrap: wrap; justify-content: center;">
-            <a href="product.html?id=${product.id}" class="btn">צפה במוצר</a>
-            <button class="btn" onclick="addToCart(${product.id}, '${escapeHtml(product.title)}', ${finalPrice}, '${product.thumbnail}')" 
-                    style="background: #ff6b6b;">הוסף לסל</button>
-        </div>
-        ${isPromo ? '<div style="position: absolute; top: 10px; right: 10px; background: #ff4444; color: white; padding: 2px 8px; border-radius: 10px; font-size: 0.8rem;">מבצע!</div>' : ''}
+        <p>${product.description ? escapeHtml(product.description.substring(0, 60)) + '...' : ''}</p>
+        <div style="display: flex; gap: 5px; flex-wrap: wrap; justify-content: center;"></div>
+        ${isPromo ? '<div class="promo-badge">מבצע!</div>' : ''}
     `;
 
-    if (isPromo) {
-        card.style.position = 'relative';
-    }
+    if (isPromo) card.style.position = 'relative';
+
+    const buttonsContainer = card.querySelector('div');
+
+    // תיקון כאן: כפתור "צפה במוצר" משתמש בפונקציה גלובלית
+    const viewBtn = document.createElement('button');
+    viewBtn.className = 'btn';
+    viewBtn.textContent = 'צפה במוצר';
+
+    viewBtn.addEventListener('click', () => viewProduct(product.id));
+
+    // כפתור "הוסף לסל" נשאר כמו שהוא
+    const addBtn = document.createElement('button');
+    addBtn.className = 'btn';
+    addBtn.textContent = 'הוסף לסל';
+    addBtn.style.background = '#ff6b6b';
+    addBtn.addEventListener('click', () => addToCart(product.id, product.title, isPromo ? (product.price * 0.8).toFixed(2) : product.price, product.thumbnail));
+
+    buttonsContainer.appendChild(viewBtn);
+    buttonsContainer.appendChild(addBtn);
 
     return card;
 }
+
+// פונקציה גלובלית לשימוש בכל הכפתורים
+window.viewProduct = function(productId) {
+    window.location.href = `product.html?id=${productId}`;
+};
+
+
+
 
 // === עדכון הקטגוריה הפעילה ===
 function updateActiveCategory(category) {
@@ -310,3 +323,4 @@ function escapeHtml(text) {
     div.textContent = text;
     return div.innerHTML;
 }
+

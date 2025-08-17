@@ -1,7 +1,5 @@
 // register.js
 
-const BIN_ID = "6899b8b0d0ea881f40568cf0";  // החליפי במזהה שלך
-const API_KEY = "$2a$10$laHYgxEfvvYKcPoe41VEb.GMNiHUXtJbbM7.YFWXiiDhZ5eTJ92"; // החליפי במפתח שלך
 
 document.addEventListener("DOMContentLoaded", () => {
     initializeRegisterPage();
@@ -57,16 +55,19 @@ function setupRegisterForm() {
             showRegisterMessage("נרשם...", "info");
 
             const userData = {
-                id: Date.now(), // מזהה ייחודי פשוט
-                username,
-                email,
-                password,
-                firstName: username,
-                lastName: "User",
-                token: null
+                id: Date.now(),               // מזהה ייחודי אוטומטי
+                username: username,           // מהשדה בטופס
+                email: email,                 // מהשדה בטופס
+                password: password,           // מהשדה בטופס
+                address: "",                  // אפשר להוסיף שדה address בטופס אם רוצים
+                cart: [],                     // ריק כברירת מחדל
+                orders: []                    // ריק כברירת מחדל
             };
+            
 
-            await saveUserToBin(userData);
+            await registerUser(userData);
+
+          // await saveJsonToBin(userData);
 
             showRegisterMessage("ההרשמה בוצעה בהצלחה! מעביר להתחברות...", "success");
 
@@ -126,45 +127,9 @@ function showRegisterMessage(message, type = "info") {
     }
 }
 
-// קריאת משתמשים מה-BIN
-async function getUsersFromBin() {
-    try {
-        const response = await fetch(`https://api.jsonbin.io/v3/b/${BIN_ID}/latest`, {
-            headers: { "X-Master-Key": API_KEY }
-        });
-        if (!response.ok) return [];
-        const data = await response.json();
-        return data.record || [];
-    } catch {
-        return [];
-    }
-}
 
-// שמירת מערך משתמשים מעודכן ב-BIN
-async function saveUsersToBin(users) {
-    const response = await fetch(`https://api.jsonbin.io/v3/b/${BIN_ID}`, {
-        method: "PUT",
-        headers: {
-            "Content-Type": "application/json",
-            "X-Master-Key": API_KEY
-        },
-        body: JSON.stringify(users)
-    });
-    if (!response.ok) throw new Error("שגיאה בשמירת המשתמשים");
-}
 
-// שמירת משתמש חדש - מוסיף למערך קיים
-async function saveUserToBin(newUser) {
-    const users = await getUsersFromBin();
 
-    // בדיקה אם שם משתמש קיים
-    if (users.some(u => u.username === newUser.username)) {
-        throw new Error("שם המשתמש כבר קיים");
-    }
-
-    users.push(newUser);
-    await saveUsersToBin(users);
-}
 
 // בדיקה אם יש משתמש מחובר ב־localStorage
 async function getCurrentUser() {
@@ -176,22 +141,4 @@ async function getCurrentUser() {
     } catch {
         return null;
     }
-}
-
-async function registerUser(newUser) {
-    // 1. טען את כל המשתמשים מה-BIN
-    const users = await loadFromJsonBin(BIN_ID);
-
-    // 2. בדוק אם שם המשתמש כבר קיים
-    if (users.some(u => u.username === newUser.username)) {
-        throw new Error("שם המשתמש כבר קיים");
-    }
-
-    // 3. הוסף את המשתמש החדש למערך
-    users.push(newUser);
-
-    // 4. שמור את הרשימה המעודכנת ב-BIN
-    await saveToJsonBin(BIN_ID, users);
-
-    return newUser;
 }
